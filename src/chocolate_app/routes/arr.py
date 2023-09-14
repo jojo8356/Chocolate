@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request
 from pyarr import LidarrAPI, RadarrAPI, ReadarrAPI, SonarrAPI
 from tmdbv3api import Find
+import ast
+eval = ast.literal_eval
 
 from chocolate_app import config
 
@@ -42,36 +44,20 @@ def lookup():
     query = json_file["query"]
 
     if media_type == "movie":
-        radarr_api_key = config["APIKeys"]["radarr"]
-        radarr_url = config["ARRSettings"]["radarrurl"]
-        radarr = RadarrAPI(radarr_url, radarr_api_key)
-        search_results = radarr.lookup_movie(query)
-        return jsonify(search_results)
+        search_results = radarr_init().lookup_movie(query)
     elif media_type == "serie":
-        sonarr_api_key = config["APIKeys"]["sonarr"]
-        sonarr_url = config["ARRSettings"]["sonarrurl"]
-        sonarr = SonarrAPI(sonarr_url, sonarr_api_key)
-        search_results = sonarr.lookup_series(query)
-        return jsonify(search_results)
+        search_results = sonarr_init().lookup_series(query)
     elif media_type == "music":
-        lidarr_api_key = config["APIKeys"]["lidarr"]
-        lidarr_url = config["ARRSettings"]["lidarrurl"]
-        lidarr = LidarrAPI(lidarr_url, lidarr_api_key)
-        search_results = lidarr.lookup(query)
-        return jsonify(search_results)
+        search_results = lidarr_init().lookup(query)
     elif media_type == "book":
-        readarr_api_key = config["APIKeys"]["readarr"]
-        readarr_url = config["ARRSettings"]["readarrurl"]
-        readarr = ReadarrAPI(readarr_url, readarr_api_key)
-        search_results = readarr.lookup_book(term=query)
-        return jsonify(search_results)
+        search_results = readarr_init().lookup_book(term=query)
+    return jsonify(search_results)
 
 
 @arr_bp.route("/list_qualities/<media_type>", methods=["GET"])
 def list_qualities(media_type):
     medias = ["movie","serie","music","book"]
     media_tools = ["radarr","sonarr","lidarr","readarr"]
-    #format_quality_list(radarr_init().get_quality_profile())
     if media_type in medias:
         index = medias.index(media_type)
         eval(f"format_quality_list({media_tools[index]}_init().get_quality_profile())")
@@ -89,9 +75,7 @@ def list_qualities(media_type):
 @arr_bp.route("/list_language_profiles/<mediaType>", methods=["GET"])
 def list_language_profiles(media_type):
     if media_type == "serie":
-        sonarr_api_key = config["APIKeys"]["sonarr"]
-        sonarr_url = config["ARRSettings"]["sonarrurl"]
-        sonarr = SonarrAPI(sonarr_url, sonarr_api_key)
+        sonarr = sonarr_init()
         languages = sonarr.get_language_profile()
         real_languages = []
         saved_ids = []
@@ -120,10 +104,7 @@ def add_media():
     term = request.get_json()["term"]
 
     if media_type == "movie":
-        radarr_folder = config["ARRSettings"]["radarrFolder"]
-        radarr_api_key = config["APIKeys"]["radarr"]
-        radarr_url = config["ARRSettings"]["radarrurl"]
-        radarr = RadarrAPI(radarr_url, radarr_api_key)
+        radarr = radarr_init()
         # get all quality : print(radarr.get_quality_profile())
         movie = radarr.lookup_movie(term=term)[int(media_id)]
         radarr.add_movie(
@@ -131,11 +112,8 @@ def add_media():
         )
     elif media_type == "serie":
         language_id = request.get_json()["languageId"]
-        sonarr_folder = config["ARRSettings"]["sonarrFolder"]
-        sonarr_api_key = config["APIKeys"]["sonarr"]
-        sonarr_url = config["ARRSettings"]["sonarrurl"]
         language_id = request.get_json()["languageId"]
-        sonarr = SonarrAPI(sonarr_url, sonarr_api_key)
+        sonarr = sonarr_init()
         serie = sonarr.lookup_series(term=term)[int(media_id)]
         sonarr.add_series(
             series=serie,
