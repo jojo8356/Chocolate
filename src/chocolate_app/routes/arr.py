@@ -67,7 +67,7 @@ def lookup():
         return jsonify(search_results)
 
 
-@arr_bp.route("/list_qualities/<mediaType>", methods=["GET"])
+@arr_bp.route("/list_qualities/<media_type>", methods=["GET"])
 def list_qualities(media_type):
     medias = ["movie","serie","music","book"]
     media_tools = ["radarr","sonarr","lidarr","readarr"]
