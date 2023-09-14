@@ -6,6 +6,35 @@ from chocolate_app import config
 
 arr_bp = Blueprint("arr", __name__)
 
+def format_quality_list(real_quality_list):
+        real_quality_list = [{"id": quality["id"], "name": quality["name"]} for quality in quality_list]
+        real_quality_list = sorted(real_quality_list, key=lambda k: k["name"].lower())
+        return jsonify(real_quality_list)
+
+def sonarr_init():
+    sonarr_api_key = config["APIKeys"]["sonarr"]
+    sonarr_url = config["ARRSettings"]["sonarrurl"]
+    sonarr = SonarrAPI(sonarr_url, sonarr_api_key)
+    return sonarr
+
+def radarr_init():
+    radarr_api_key = config["APIKeys"]["radarr"]
+    radarr_url = config["ARRSettings"]["radarrurl"]
+    radarr = RadarrAPI(radarr_url, radarr_api_key)
+    return radarr
+
+def lidarr_init():
+        lidarr_api_key = config["APIKeys"]["lidarr"]
+        lidarr_url = config["ARRSettings"]["lidarrurl"]
+        lidarr = LidarrAPI(lidarr_url, lidarr_api_key)
+        return lidarr
+
+def readarr_init():
+        readarr_api_key = config["APIKeys"]["readarr"]
+        readarr_url = config["ARRSettings"]["readarrurl"]
+        readarr = ReadarrAPI(readarr_url, readarr_api_key)
+        return readarr
+
 @arr_bp.route("/lookup", methods=["POST"])
 def lookup():
     json_file = request.get_json()
@@ -40,68 +69,12 @@ def lookup():
 
 @arr_bp.route("/list_qualities/<mediaType>", methods=["GET"])
 def list_qualities(media_type):
-    if media_type == "movie":
-        radarr_api_key = config["APIKeys"]["radarr"]
-        radarr_url = config["ARRSettings"]["radarrurl"]
-        radarr = RadarrAPI(radarr_url, radarr_api_key)
-        quality_list = radarr.get_quality_profile()
-
-        real_quality_list = []
-
-        for quality in quality_list:
-            real_quality_list.append({"id": quality["id"], "name": quality["name"]})
-
-        # order the list by name
-        real_quality_list = sorted(real_quality_list, key=lambda k: k["name"].lower())
-
-        return jsonify(real_quality_list)
-    elif media_type == "serie":
-        sonarr_api_key = config["APIKeys"]["sonarr"]
-        sonarr_url = config["ARRSettings"]["sonarrurl"]
-        sonarr = SonarrAPI(sonarr_url, sonarr_api_key)
-        quality_list = sonarr.get_quality_profile()
-
-        real_quality_list = []
-
-        for quality in quality_list:
-            real_quality_list.append({"id": quality["id"], "name": quality["name"]})
-
-        # order the list by name
-        real_quality_list = sorted(real_quality_list, key=lambda k: k["name"].lower())
-
-        return jsonify(real_quality_list)
-
-    elif media_type == "music":
-        lidarr_api_key = config["APIKeys"]["lidarr"]
-        lidarr_url = config["ARRSettings"]["lidarrurl"]
-        lidarr = LidarrAPI(lidarr_url, lidarr_api_key)
-        quality_list = lidarr.get_quality_profile()
-
-        real_quality_list = []
-
-        for quality in quality_list:
-            real_quality_list.append({"id": quality["id"], "name": quality["name"]})
-
-        # order the list by name
-        real_quality_list = sorted(real_quality_list, key=lambda k: k["name"].lower())
-
-        return jsonify(real_quality_list)
-
-    elif media_type == "book":
-        readarr_api_key = config["APIKeys"]["readarr"]
-        readarr_url = config["ARRSettings"]["readarrurl"]
-        readarr = ReadarrAPI(readarr_url, readarr_api_key)
-        quality_list = readarr.get_quality_profile()
-
-        real_quality_list = []
-
-        for quality in quality_list:
-            real_quality_list.append({"id": quality["id"], "name": quality["name"]})
-
-        # order the list by name
-        real_quality_list = sorted(real_quality_list, key=lambda k: k["name"].lower())
-
-        return jsonify(real_quality_list)
+    medias = ["movie","serie","music","book"]
+    media_tools = ["radarr","sonarr","lidarr","readarr"]
+    #format_quality_list(radarr_init().get_quality_profile())
+    if media_type in medias:
+        index = medias.index(media_type)
+        eval(f"format_quality_list({media_tools[index]}_init().get_quality_profile())")
 
     return jsonify(
         [
@@ -125,10 +98,9 @@ def list_language_profiles(media_type):
         for language in languages:
             the_languages = language["languages"]
             for the_language in the_languages:
-                if the_language["allowed"]:
-                    if the_language["language"]["id"] not in saved_ids:
-                        saved_ids.append(the_language["language"]["id"])
-                        real_languages.append(the_language["language"])
+                if the_language["allowed"] and the_language["language"]["id"] not in saved_ids:
+                    saved_ids += [the_language["language"]["id"]]
+                    real_languages += [the_language["language"]]
         return jsonify(real_languages)
     return jsonify(
         [
