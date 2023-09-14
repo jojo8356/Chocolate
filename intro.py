@@ -156,7 +156,7 @@ def listAllSeasons():
 def detectIntro(mainPath, libName, findPath, seasonName):
     episodesListe1 = listAllVideoFiles(mainPath)
     episodesListe1.sort(key=lambda f: int(re.sub("\D", "", f)))
-    
+
     librarie = Libraries.query.filter_by(libName=libName).first()
     seriesPath = librarie.libFolder
     minutesToDetect = 5
@@ -166,16 +166,13 @@ def detectIntro(mainPath, libName, findPath, seasonName):
         episodeFindPath = f"{findPath}/{episode1}".replace("\\", "/")
         episodeSlug = episodeSlug.replace(seriesPath, "")
         episodeData = Episodes.query.filter_by(slug=episodeFindPath).first()
-        a = bool(episodeData.introStart == 0.0) # if introStart is 0.0, then it's not set
-        b = bool(episodeData.introEnd == 0.0) # if introEnd is 0.0, then it's not set
-        c = bool(a and b) # if both are 0.0, then it's not set
-        #print(f"Pour l"épisode {episodeSlug}, a = {a}, b = {b}, c = {c}")
-        timeStart = time.time()
+        a = episodeData.introStart == 0.0
+        b = episodeData.introEnd == 0.0
+        c = a and b
         if (a ^ b) or c:
-            episodeOneData = {}
-            episodeOneData['name'] = episode1
-            episodeOneData['start'] = 0
-            episodeOneData['end'] = 0
+            #print(f"Pour l"épisode {episodeSlug}, a = {a}, b = {b}, c = {c}")
+            timeStart = time.time()
+            episodeOneData = {'name': episode1, 'start': 0, 'end': 0}
             episode1Index = episodesListe1.index(episode1)
             if episode1Index < len(episodesListe1) - 1:
                 episode2 = episodesListe1[episode1Index + 1]
@@ -186,7 +183,7 @@ def detectIntro(mainPath, libName, findPath, seasonName):
             videoFile2 = f"{mainPath}/{episode2}"
             cap1 = cv2.VideoCapture(videoFile1)
             cap2 = cv2.VideoCapture(videoFile2)
-            
+
             #get the frameRate of the video
             frameRate1 = cap1.get(cv2.CAP_PROP_FPS)
             frameRate2 = cap2.get(cv2.CAP_PROP_FPS)
@@ -253,11 +250,15 @@ def detectIntro(mainPath, libName, findPath, seasonName):
 
 
 def listAllVideoFiles(seasonPath):
-    episodes = []
-    for episode in os.listdir(seasonPath):
-        if episode.endswith(".mp4") or episode.endswith(".mkv") or episode.endswith(".avi") or episode.endswith(".mov") or episode.endswith(".wmv"):
-            episodes.append(episode)
-    return episodes
+    return [
+        episode
+        for episode in os.listdir(seasonPath)
+        if episode.endswith(".mp4")
+        or episode.endswith(".mkv")
+        or episode.endswith(".avi")
+        or episode.endswith(".mov")
+        or episode.endswith(".wmv")
+    ]
 
 import os, subprocess
 from pydub import AudioSegment
@@ -302,18 +303,19 @@ def compare_audio(audio_file_1, audio_file_2, threshold):
 
     indexes = []
     for element in allIndexes: 
-        for compare_element in allIndexes: 
-            if compare_element - element <= 4: 
-                indexes.append(compare_element) 
-    
+        indexes.extend(
+            compare_element
+            for compare_element in allIndexes
+            if compare_element - element <= 4
+        )
     data["start"] = min(indexes)
 
     return data
 
 # Fonction principale
 def main(video_file_1, video_file_2, threshold):
-    audio_file_1 = os.path.splitext(video_file_1)[0] + ".wav"
-    audio_file_2 = os.path.splitext(video_file_2)[0] + ".wav"
+    audio_file_1 = f"{os.path.splitext(video_file_1)[0]}.wav"
+    audio_file_2 = f"{os.path.splitext(video_file_2)[0]}.wav"
     extract_audio(video_file_1, audio_file_1)
     extract_audio(video_file_2, audio_file_2)
     similar_chunks = compare_audio(audio_file_1, audio_file_2, threshold)
@@ -328,8 +330,8 @@ useImage = False
 
 # Exécuter la fonction principale
 if __name__ == "__main__":
-    if not useImage:
-        with app.app_context():
+    with app.app_context():
+        if not useImage:
             allSeriesLibrary = Libraries.query.filter_by(libType="series").all()
             for library in allSeriesLibrary:
                 allSeries = Series.query.filter_by(libraryName=library.libName).all()
@@ -348,6 +350,5 @@ if __name__ == "__main__":
                             episode2Path = f"{basePath}{episode2}"
                             threshold = 0.5
                             main(episode1Path, episode2Path, threshold)
-    else:
-        with app.app_context():
+        else:
             listAllSeasons()
