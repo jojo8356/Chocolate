@@ -6,17 +6,17 @@ from . import DB
 
 class Users(DB.Model, UserMixin):
     id = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
-    name = DB.Column(DB.String(255), unique=True)
-    password = DB.Column(DB.String(255))
-    profil_picture = DB.Column(DB.String(255))
-    account_type = DB.Column(DB.String(255))
+    name = DB.Column(DB.Text, unique=True)
+    password = DB.Column(DB.Text)
+    profil_picture = DB.Column(DB.Text)
+    account_type = DB.Column(DB.Text)
 
     def __init__(self, name, password, profil_picture, account_type):
         self.name = name
-        if password is not None and password != "":
+        if password:
             self.password = generate_password_hash(password)
         else:
-            self.password = None
+            self.password = ""
         self.profil_picture = profil_picture
         self.account_type = account_type
 
@@ -24,27 +24,25 @@ class Users(DB.Model, UserMixin):
         return f"<Name {self.name}>"
 
     def verify_password(self, pwd):
-        if not self.password:
-            return True
-        return check_password_hash(self.password, pwd)
+        return True if not self.password else check_password_hash(self.password, pwd)
 
 
 class Movies(DB.Model):
     id = DB.Column(DB.Integer, primary_key=True)
-    title = DB.Column(DB.String(255), primary_key=True)
-    real_title = DB.Column(DB.String(255), primary_key=True)
-    cover = DB.Column(DB.String(255))
-    banner = DB.Column(DB.String(255))
-    slug = DB.Column(DB.String(255))
+    title = DB.Column(DB.Text, primary_key=True)
+    real_title = DB.Column(DB.Text, primary_key=True)
+    cover = DB.Column(DB.Text)
+    banner = DB.Column(DB.Text)
+    slug = DB.Column(DB.Text)
     description = DB.Column(DB.String(2550))
-    note = DB.Column(DB.String(255))
-    date = DB.Column(DB.String(255))
-    genre = DB.Column(DB.String(255))
-    duration = DB.Column(DB.String(255))
-    cast = DB.Column(DB.String(255))
-    bande_annonce_url = DB.Column(DB.String(255))
-    adult = DB.Column(DB.String(255))
-    library_name = DB.Column(DB.String(255))
+    note = DB.Column(DB.Text)
+    date = DB.Column(DB.Text)
+    genre = DB.Column(DB.Text)
+    duration = DB.Column(DB.Text)
+    cast = DB.Column(DB.Text)
+    bande_annonce_url = DB.Column(DB.Text)
+    adult = DB.Column(DB.Text)
+    library_name = DB.Column(DB.Text)
     alternatives_names = DB.Column(DB.Text)
     file_date = DB.Column(DB.Float)
 
@@ -54,20 +52,20 @@ class Movies(DB.Model):
 
 class Series(DB.Model):
     id = DB.Column(DB.Integer, primary_key=True)
-    name = DB.Column(DB.String(255), primary_key=True)
-    original_name = DB.Column(DB.String(255), primary_key=True)
-    genre = DB.Column(DB.String(255))
-    duration = DB.Column(DB.String(255))
+    name = DB.Column(DB.Text, primary_key=True)
+    original_name = DB.Column(DB.Text, primary_key=True)
+    genre = DB.Column(DB.Text)
+    duration = DB.Column(DB.Text)
     description = DB.Column(DB.String(2550))
-    cast = DB.Column(DB.String(255))
-    bande_annonce_url = DB.Column(DB.String(255))
-    cover = DB.Column(DB.String(255))
-    banner = DB.Column(DB.String(255))
-    note = DB.Column(DB.String(255))
-    date = DB.Column(DB.String(255))
+    cast = DB.Column(DB.Text)
+    bande_annonce_url = DB.Column(DB.Text)
+    cover = DB.Column(DB.Text)
+    banner = DB.Column(DB.Text)
+    note = DB.Column(DB.Text)
+    date = DB.Column(DB.Text)
     serie_modified_time = DB.Column(DB.Float)
-    library_name = DB.Column(DB.String(255))
-    adult = DB.Column(DB.String(255))
+    library_name = DB.Column(DB.Text)
+    adult = DB.Column(DB.Text)
 
     def __repr__(self) -> str:
         return f"<Series {self.name}>"
@@ -77,11 +75,11 @@ class Seasons(DB.Model):
     serie = DB.Column(DB.Integer, nullable=False)
     season_id = DB.Column(DB.Integer, primary_key=True)
     season_number = DB.Column(DB.Integer, primary_key=True)
-    release = DB.Column(DB.String(255))
-    episodes_number = DB.Column(DB.String(255))
-    season_name = DB.Column(DB.String(255))
+    release = DB.Column(DB.Text)
+    episodes_number = DB.Column(DB.Text)
+    season_name = DB.Column(DB.Text)
     season_description = DB.Column(DB.Text)
-    cover = DB.Column(DB.String(255))
+    cover = DB.Column(DB.Text)
     modified_date = DB.Column(DB.Float)
     number_of_episode_in_folder = DB.Column(DB.Integer)
 
@@ -92,12 +90,12 @@ class Seasons(DB.Model):
 class Episodes(DB.Model):
     season_id = DB.Column(DB.Integer, nullable=False)
     episode_id = DB.Column(DB.Integer, primary_key=True)
-    episode_name = DB.Column(DB.String(255), primary_key=True)
+    episode_name = DB.Column(DB.Text, primary_key=True)
     episode_number = DB.Column(DB.Integer, primary_key=True)
     episode_description = DB.Column(DB.Text)
-    episode_cover_path = DB.Column(DB.String(255))
-    release_date = DB.Column(DB.String(255))
-    slug = DB.Column(DB.String(255))
+    episode_cover_path = DB.Column(DB.Text)
+    release_date = DB.Column(DB.Text)
+    slug = DB.Column(DB.Text)
     intro_start = DB.Column(DB.Float)
     intro_end = DB.Column(DB.Float)
 
@@ -106,29 +104,29 @@ class Episodes(DB.Model):
 
 
 class Games(DB.Model):
-    console = DB.Column(DB.String(255), nullable=False)
+    console = DB.Column(DB.Text, nullable=False)
     id = DB.Column(DB.Integer, primary_key=True)
-    title = DB.Column(DB.String(255), primary_key=True)
-    real_title = DB.Column(DB.String(255), primary_key=True)
-    cover = DB.Column(DB.String(255))
+    title = DB.Column(DB.Text, primary_key=True)
+    real_title = DB.Column(DB.Text, primary_key=True)
+    cover = DB.Column(DB.Text)
     description = DB.Column(DB.String(2550))
-    note = DB.Column(DB.String(255))
-    date = DB.Column(DB.String(255))
-    genre = DB.Column(DB.String(255))
-    slug = DB.Column(DB.String(255))
-    library_name = DB.Column(DB.String(255))
+    note = DB.Column(DB.Text)
+    date = DB.Column(DB.Text)
+    genre = DB.Column(DB.Text)
+    slug = DB.Column(DB.Text)
+    library_name = DB.Column(DB.Text)
 
     def __repr__(self) -> str:
         return f"<Games {self.title}>"
 
 
 class OthersVideos(DB.Model):
-    video_hash = DB.Column(DB.String(255), primary_key=True)
-    title = DB.Column(DB.String(255), primary_key=True)
-    slug = DB.Column(DB.String(255))
-    banner = DB.Column(DB.String(255))
-    duration = DB.Column(DB.String(255))
-    library_name = DB.Column(DB.String(255))
+    video_hash = DB.Column(DB.Text, primary_key=True)
+    title = DB.Column(DB.Text, primary_key=True)
+    slug = DB.Column(DB.Text)
+    banner = DB.Column(DB.Text)
+    duration = DB.Column(DB.Text)
+    library_name = DB.Column(DB.Text)
 
     def __repr__(self) -> str:
         return f"<OthersVideos {self.title}>"
@@ -136,11 +134,11 @@ class OthersVideos(DB.Model):
 
 class Books(DB.Model):
     id = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
-    title = DB.Column(DB.String(255))
-    slug = DB.Column(DB.String(255))
-    book_type = DB.Column(DB.String(255))
-    cover = DB.Column(DB.String(255))
-    library_name = DB.Column(DB.String(255))
+    title = DB.Column(DB.Text)
+    slug = DB.Column(DB.Text)
+    book_type = DB.Column(DB.Text)
+    cover = DB.Column(DB.Text)
+    library_name = DB.Column(DB.Text)
 
     def __repr__(self) -> str:
         return f"<Books {self.title}>"
@@ -165,9 +163,9 @@ class Artists(DB.Model):
     """
 
     id = DB.Column(DB.Text, primary_key=True)
-    name = DB.Column(DB.String(255))
-    cover = DB.Column(DB.String(255))
-    library_name = DB.Column(DB.String(255))
+    name = DB.Column(DB.Text)
+    cover = DB.Column(DB.Text)
+    library_name = DB.Column(DB.Text)
 
     def __repr__(self) -> str:
         return f"<Artists {self.name}>"
@@ -199,11 +197,11 @@ class Albums(DB.Model):
 
     artist_id = DB.Column(DB.Integer, primary_key=True)
     id = DB.Column(DB.Integer, primary_key=True)
-    name = DB.Column(DB.String(255))
-    dir_name = DB.Column(DB.String(255))
-    cover = DB.Column(DB.String(255))
+    name = DB.Column(DB.Text)
+    dir_name = DB.Column(DB.Text)
+    cover = DB.Column(DB.Text)
     tracks = DB.Column(DB.Text)
-    library_name = DB.Column(DB.String(255))
+    library_name = DB.Column(DB.Text)
 
     def __repr__(self) -> str:
         return f"<Albums {self.name}>"
@@ -238,11 +236,11 @@ class Tracks(DB.Model):
     artist_id = DB.Column(DB.Integer)
     album_id = DB.Column(DB.Integer)
     id = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
-    name = DB.Column(DB.String(255))
-    slug = DB.Column(DB.String(255))
+    name = DB.Column(DB.Text)
+    slug = DB.Column(DB.Text)
     duration = DB.Column(DB.Integer)
-    cover = DB.Column(DB.String(255))
-    library_name = DB.Column(DB.String(255))
+    cover = DB.Column(DB.Text)
+    library_name = DB.Column(DB.Text)
 
     def __repr__(self) -> str:
         return f"<Tracks {self.name}>"
@@ -274,30 +272,30 @@ class Playlists(DB.Model):
 
     user_id = DB.Column(DB.Integer)
     id = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
-    name = DB.Column(DB.String(255))
+    name = DB.Column(DB.Text)
     tracks = DB.Column(DB.Text)
     duration = DB.Column(DB.Integer)
-    cover = DB.Column(DB.String(255))
-    library_name = DB.Column(DB.String(255))
+    cover = DB.Column(DB.Text)
+    library_name = DB.Column(DB.Text)
 
     def __repr__(self) -> str:
         return f"<Playlist {self.name}>"
 
 
 class Language(DB.Model):
-    language = DB.Column(DB.String(255), primary_key=True)
+    language = DB.Column(DB.Text, primary_key=True)
 
     def __repr__(self) -> str:
         return f"<Language {self.language}>"
 
 
 class Actors(DB.Model):
-    name = DB.Column(DB.String(255), primary_key=True)
+    name = DB.Column(DB.Text, primary_key=True)
     actor_id = DB.Column(DB.Integer, primary_key=True)
     actor_image = DB.Column(DB.Text)
     actor_description = DB.Column(DB.String(2550))
-    actor_birth_date = DB.Column(DB.String(255))
-    actor_birth_place = DB.Column(DB.String(255))
+    actor_birth_date = DB.Column(DB.Text)
+    actor_birth_place = DB.Column(DB.Text)
     actor_programs = DB.Column(DB.Text)
 
     def __repr__(self) -> str:
@@ -346,15 +344,15 @@ class LatestEpisodeWatched(DB.Model):
 
 
 class InviteCodes(DB.Model):
-    code = DB.Column(DB.String(255), primary_key=True)
+    code = DB.Column(DB.Text, primary_key=True)
 
     def __repr__(self) -> str:
         return f"<InviteCode {self.code}>"
 
 
 class LibrariesMerge(DB.Model):
-    parent_lib = DB.Column(DB.String(255), primary_key=True)
-    child_lib = DB.Column(DB.String(255), primary_key=True)
+    parent_lib = DB.Column(DB.Text, primary_key=True)
+    child_lib = DB.Column(DB.Text, primary_key=True)
 
     def __repr__(self) -> str:
         return f"<LibrariesMerge {self.parent_lib}>"
