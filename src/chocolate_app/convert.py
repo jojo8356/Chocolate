@@ -14,7 +14,7 @@ for seasons in allSeasons:
     print(allEpisodes)
     for filename in allEpisodes:
         # Vérifiez que le fichier est une vidéo en utilisant son extension de fichier
-        if "."+filename.split(".")[-1] in [".mp4",".mkv",".avi"]:
+        if filename.split(".")[-1] in ["mp4","mkv","avi"]:
             # Construisez le chemin complet du fichier vidéo en utilisant le chemin du dossier et le nom de fichier
             filepath = f"{folder_path}\\{seasons}\\{filename}"
             newFilepath, file_extension = os.path.splitext(filepath)
