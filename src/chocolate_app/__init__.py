@@ -1,10 +1,4 @@
-import os
-import configparser
-import platform
-import argparse
-import logging
-import pathlib
-import shutil
+import os,configparser,platform,argparse,logging,pathlib,shutil
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -37,12 +31,14 @@ parser.add_argument("--no-scans", help="Disable startup scans", action="store_tr
 
 ARGUMENTS = parser.parse_args()
 
+APPDATA = os.getenv('APPDATA')
+
 paths = {
     "Windows": {
-        "config": f"{os.getenv('APPDATA')}/Chocolate/config.ini",
-        "db": f"{os.getenv('APPDATA')}/Chocolate/database.db",
-        "images": f"{os.getenv('APPDATA')}/Chocolate/images",
-        "logs": f"{os.getenv('APPDATA')}/Chocolate/server.log",
+        "config": f"{APPDATA}/Chocolate/config.ini",
+        "db": f"{APPDATA}/Chocolate/database.db",
+        "images": f"{APPDATA}/Chocolate/images",
+        "logs": f"{APPDATA}/Chocolate/server.log",
     },
     "Linux": {
         "config": "/var/chocolate/config.ini",
@@ -65,20 +61,15 @@ if OPERATING_SYSTEM not in paths:
         f"No known default file path for the config / database on your operating system ({OPERATING_SYSTEM}). Please use --config and --database path or create a pull request to add your system to the one supported by Chocolate"
     )
 
-CONFIG_PATH = ARGUMENTS.config or paths[OPERATING_SYSTEM]["config"]
-CONFIG_PATH = CONFIG_PATH.replace("\\", "/")
+CONFIG_PATH = (ARGUMENTS.config or paths[OPERATING_SYSTEM]["config"]).replace("\\", "/")
 
-DB_PATH = ARGUMENTS.db or paths[OPERATING_SYSTEM]["db"]
-DB_PATH = DB_PATH.replace("\\", "/")
+DB_PATH = (ARGUMENTS.db or paths[OPERATING_SYSTEM]["db"]).replace("\\", "/")
 
-LOG_PATH = ARGUMENTS.logs or paths[OPERATING_SYSTEM]["logs"]
-LOG_PATH = LOG_PATH.replace("\\", "/")
+LOG_PATH = (ARGUMENTS.logs or paths[OPERATING_SYSTEM]["logs"]).replace("\\", "/")
 
-IMAGES_PATH = ARGUMENTS.images or paths[OPERATING_SYSTEM]["images"]
-IMAGES_PATH = IMAGES_PATH.replace("\\", "/")
-if IMAGES_PATH.endswith("/"):
+IMAGES_PATH = (ARGUMENTS.images or paths[OPERATING_SYSTEM]["images"]).replace("\\", "/")
+if IMAGES_PATH[-1] == "/":
     IMAGES_PATH = IMAGES_PATH[:-1]
-
 
 def create_app():
     is_in_docker = os.environ.get("AM_I_IN_A_DOCKER_CONTAINER", False)
@@ -86,16 +77,13 @@ def create_app():
 
     if is_in_docker:
         dir_path = "/chocolate"
-        TEMPLATE_FOLDER = f"{dir_path}/templates"
     else:
         dir_path = pathlib.Path(__package__).parent
-        TEMPLATE_FOLDER = f"{dir_path}/templates"
+    TEMPLATE_FOLDER = f"{dir_path}/templates"
 
-    if not os.path.isdir(IMAGES_PATH):
-        os.mkdir(IMAGES_PATH)
-    if not os.path.isdir(f"{IMAGES_PATH}/avatars"):
-        os.mkdir(f"{IMAGES_PATH}/avatars")
-
+    for x in [IMAGES_PATH, f"{IMAGES_PATH}/avatars"]:
+        if not os.path.isdir(x):
+            os.mkdir(x)
     app = Flask(
         __name__, static_folder=f"{dir_path}/static", template_folder=TEMPLATE_FOLDER
     )
