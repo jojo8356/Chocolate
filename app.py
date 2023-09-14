@@ -63,21 +63,18 @@ class Users(db.Model, UserMixin):
     accountType = db.Column(db.String(255))
 
     def __init__(self, name, password, profilePicture, accountType):
-        self.name = name
-        if password != None:
-            self.password = generate_password_hash(password)
-        else:
-            self.password = None
-        self.profilePicture = profilePicture
-        self.accountType = accountType
+       self.name = name
+       self.password = generate_password_hash(password) if password != None else None
+       self.profilePicture = profilePicture
+       self.accountType = accountType
 
     def __repr__(self) -> str:
         return f'<Name {self.name}>'
 
     def verify_password(self, pwd):
-        if self.password == None:
-            return True
-        return check_password_hash(self.password, pwd)
+       if self.password is None:
+          return True
+       return check_password_hash(self.password, pwd)
 
 class Movies(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -371,90 +368,93 @@ def searchGame(game, console):
     return IGDBRequest(url,console)
 
 def IGDBRequest(url, console):
-    customHeaders = {
-        'User-Agent': 'Mozilla/5.0 (X11; UwUntu; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0',
-        'Accept': '*/*',
-        'X-Requested-With': 'XMLHttpRequest',
-        'Origin': url,
-        'DNT': '1',
-        'Sec-Fetch-Dest': 'empty',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'same-origin',
-        'Referer': url,
-        'Connection': 'keep-alive',
-        'Pragma': 'no-cache',
-        'Cache-Control': 'no-cache',
-    }
-    response = requests.request("GET", url, headers=customHeaders)
-    
-    if response.status_code == 403:
-        return None
-    elif response.json() != {}:
-        grantType = "client_credentials"
-        getAccessToken = f"https://id.twitch.tv/oauth2/token?client_id={clientID}&client_secret={clientSecret}&grant_type={grantType}"
-        token = requests.request("POST", getAccessToken)
-        token = token.json()
-        token = token["access_token"]
+   customHeaders = {
+       'User-Agent': 'Mozilla/5.0 (X11; UwUntu; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0',
+       'Accept': '*/*',
+       'X-Requested-With': 'XMLHttpRequest',
+       'Origin': url,
+       'DNT': '1',
+       'Sec-Fetch-Dest': 'empty',
+       'Sec-Fetch-Mode': 'cors',
+       'Sec-Fetch-Site': 'same-origin',
+       'Referer': url,
+       'Connection': 'keep-alive',
+       'Pragma': 'no-cache',
+       'Cache-Control': 'no-cache',
+   }
+   response = requests.request("GET", url, headers=customHeaders)
 
-        headers = {
-            "Accept": "application/json", "Authorization": f"Bearer {token}", "Client-ID": clientID
-        }
+   if response.status_code == 403:
+      return None
+   elif response.json() != {}:
+      grantType = "client_credentials"
+      getAccessToken = f"https://id.twitch.tv/oauth2/token?client_id={clientID}&client_secret={clientSecret}&grant_type={grantType}"
+      token = requests.request("POST", getAccessToken)
+      token = token.json()
+      token = token["access_token"]
 
-        games = response.json()["game_suggest"]
-        for i in games:
-            game=i
-            gameId = game["id"]
-            url = f"https://api.igdb.com/v4/games"
-            body = f"fields name, cover.*, summary, total_rating, first_release_date, genres.*, platforms.*; where id = {gameId};"
-            response = requests.request("POST", url, headers=headers, data=body)
-            if len(response.json())==0:
-                break
-            game = response.json()[0]
-            if "platforms" in game:
-                gamePlatforms = game["platforms"]
-                try:
-                    platforms = [i["abbreviation"] for i in gamePlatforms]
+      headers = {
+          "Accept": "application/json", "Authorization": f"Bearer {token}", "Client-ID": clientID
+      }
 
-                    realConsoleName = {
-                        "GB": "Game Boy", "GBA": "Game Boy Advance", "GBC": "Game Boy Color", "N64": "Nintendo 64", "NES": "Nintendo Entertainment System", "NDS": "Nintendo DS", "SNES": "Super Nintendo Entertainment System", "Sega Master System": "Sega Master System", "Sega Mega Drive": "Sega Mega Drive", "PS1": "PS1"
-                    }
+      games = response.json()["game_suggest"]
+      for i in games:
+         game=i
+         gameId = game["id"]
+         url = "https://api.igdb.com/v4/games"
+         body = f"fields name, cover.*, summary, total_rating, first_release_date, genres.*, platforms.*; where id = {gameId};"
+         response = requests.request("POST", url, headers=headers, data=body)
+         if len(response.json())==0:
+             break
+         game = response.json()[0]
+         if "platforms" in game:
+            gamePlatforms = game["platforms"]
+            try:
+               platforms = [i["abbreviation"] for i in gamePlatforms]
 
-                    if realConsoleName[console] not in platforms and console not in platforms:
-                        continue
-                    if "total_rating" not in game:
-                        game["total_rating"] = "Unknown"
-                    if "genres" not in game:
-                        game["genres"] = [{"name": "Unknown"}]
-                    if "summary" not in game:
-                        game["summary"] = "Unknown"
-                    if "first_release_date" not in game:
-                        game["first_release_date"] = "Unknown"
-                    if "cover" not in game:
-                        game["cover"] = {"url": "//images.igdb.com/igdb/image/upload/t_cover_big/nocover.png"}
+               realConsoleName = {
+                   "GB": "Game Boy", "GBA": "Game Boy Advance", "GBC": "Game Boy Color", "N64": "Nintendo 64", "NES": "Nintendo Entertainment System", "NDS": "Nintendo DS", "SNES": "Super Nintendo Entertainment System", "Sega Master System": "Sega Master System", "Sega Mega Drive": "Sega Mega Drive", "PS1": "PS1"
+               }
 
-                    game["summary"] = translate(game["summary"])
-                    game["genres"][0]["name"] = translate(game["genres"][0]["name"])
+               if realConsoleName[console] not in platforms and console not in platforms:
+                   continue
+               if "total_rating" not in game:
+                   game["total_rating"] = "Unknown"
+               if "genres" not in game:
+                   game["genres"] = [{"name": "Unknown"}]
+               if "summary" not in game:
+                   game["summary"] = "Unknown"
+               if "first_release_date" not in game:
+                   game["first_release_date"] = "Unknown"
+               if "cover" not in game:
+                   game["cover"] = {"url": "//images.igdb.com/igdb/image/upload/t_cover_big/nocover.png"}
+
+               game["summary"] = translate(game["summary"])
+               game["genres"][0]["name"] = translate(game["genres"][0]["name"])
 
 
-                    genres = []
-                    for genre in game["genres"]:
-                        genres.append(genre["name"])
-                    genres = ", ".join(genres)
+               genres = [genre["name"] for genre in game["genres"]]
+               genres = ", ".join(genres)
 
-                    gameData = {
-                        "title": game["name"], "cover": game["cover"]["url"].replace("//", "https://"), "description": game["summary"], "note": game["total_rating"], "date": game["first_release_date"], "genre": genres, "id": game["id"]
-                    }
-                    return gameData
-                except:
-                    continue
-        return None
+               return {
+                   "title": game["name"],
+                   "cover": game["cover"]["url"].replace("//", "https://"),
+                   "description": game["summary"],
+                   "note": game["total_rating"],
+                   "date": game["first_release_date"],
+                   "genre": genres,
+                   "id": game["id"],
+               }
+            except:
+                continue
+      return None
 
 def translate(string):
-    language = config["ChocolateSettings"]["language"]
-    if language == "EN":
-        return string
-    translated = GoogleTranslator(source='english', target=language.lower()).translate(string)
-    return translated
+   language = config["ChocolateSettings"]["language"]
+   if language == "EN":
+       return string
+   return GoogleTranslator(source='english',
+                           target=language.lower()).translate(string)
 
 
 
@@ -503,7 +503,7 @@ with app.app_context():
         db.session.commit()
 
 CHUNK_LENGTH = 5
-CHUNK_LENGTH = int(CHUNK_LENGTH)
+CHUNK_LENGTH = CHUNK_LENGTH
 genreList = {
     12: "Aventure",
     14: "Fantastique",
